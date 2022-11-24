@@ -44,7 +44,14 @@ void setup(void) {
   mpu6050.calcGyroOffsets(true);
   lcd.init();
   lcd.backlight();
-  
+
+      if (! rtc.begin()) {
+  Serial.println("Couldn't find RTC");
+  while (1);
+  }
+ rtc.adjust(DateTime(__DATE__, __TIME__));
+ //rtc.adjust(DateTime(2022,11,2,11,36,00));
+ 
   xTaskCreate(dip_switch_task, "dip switch task", 1024, NULL, 1, NULL);
 //  xTaskCreate(gyro_task, "gyro task", 2048, NULL, 1, NULL);
 //  xTaskCreate(rtime_task, "rtc task", 2048, NULL, 1, NULL);
@@ -76,14 +83,16 @@ void loop(void) {
   lcd.setCursor(0,1);
   lcd.print("Z:");
   lcd.print(mpu6050.getAngleZ());
+  DateTime now = rtc.now();
+  timen = String(daysOfTheWeek[now.dayOfTheWeek()]) + "," + String(now.hour(), DEC) + ":" + String(now.minute(), DEC) + ":" + String(now.second(), DEC);
   
   if (millis() - prev_mill >= 500u) {
     prev_mill = millis();
     payload = "\n==============================\n" + String("Numb: ") + count + "\n" + String("Tresshold: ") + String(angle_treshold) + " degree\n" + "x:" + String(x) + "\ty:" + String(y) + "\tz:" + String(z) + "\n" + timen + "\n" + "\n==============================\n";
 
     Serial.println(payload);
-//    Serial.println(invert);
-//    Serial.println(timen);
+    Serial.println(invert);
+    Serial.println(timen);
   }
   web.start();
 
